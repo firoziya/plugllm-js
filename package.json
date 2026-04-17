@@ -1,0 +1,38 @@
+{
+  "name": "plugllm",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Unified LLM API interface for OpenAI, Gemini, Mistral, Groq, Claude, and 10+ providers",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "base.js",
+    "factory.js",
+    "types.js",
+    "providers/",
+    "v1/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "llm", "openai", "gemini", "claude", "groq", "mistral",
+    "ai", "chatgpt", "gpt-4", "language-model", "api-wrapper"
+  ],
+  "author": "Yash Kumar Firoziya <ykfiroziya@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/firoziya/plugllm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/firoziya/plugllm/issues"
+  },
+  "homepage": "https://plugllm.firoziyash.life",
+  "dependencies": {},
+  "optionalDependencies": {
+    "dotenv": "^16.0.0"
+  }
+}
