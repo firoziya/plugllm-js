@@ -1,5 +1,3 @@
-use imports in ES javascript in all examples not use require()
-
 # PlugLLM Documentation
 
 ## Table of Contents
