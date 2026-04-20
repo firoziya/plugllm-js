@@ -1,315 +1,640 @@
-# 🔌 PlugLLM - Unified LLM API Interface
+# 🔌 PlugLLM
+
+<div align="center">
 
 [![npm version](https://img.shields.io/npm/v/plugllm.svg)](https://www.npmjs.com/package/plugllm)
-[![License](https://img.shields.io/github/license/firoziya/plugllm)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/npm/dt/plugllm.svg)](https://www.npmjs.com/package/plugllm)
 [![GitHub Stars](https://img.shields.io/github/stars/firoziya/plugllm?style=social)](https://github.com/firoziya/plugllm)
+[![Node.js Version](https://img.shields.io/node/v/plugllm.svg)](https://nodejs.org)
 
-**PlugLLM** is a powerful, unified Node.js package that provides a consistent interface for 13+ Large Language Model (LLM) providers. Stop dealing with different SDKs and API formats — use one simple API for all your LLM needs.
+**One API to rule them all — Unified interface for 13+ LLM providers**
 
-```bash
-npm install plugllm
-```
+[Quick Start](#-quick-start) •
+[Documentation](#-documentation) •
+[Supported Providers](#-supported-providers) •
+[Examples](#-examples) •
+[API Reference](#-api-reference)
 
-## ✨ Key Features
+</div>
 
-- 🔌 **Unified API** — Same interface for all 13+ providers
-- 🧠 **Context Memory** — Built-in conversation memory with deque (configurable up to 10+ messages)
-- 💬 **Multiple Methods** — `generate()`, `chat()`, `ask()`, `stream()` for every use case
-- 📡 **Streaming** — Real-time response streaming via async generators
-- 🏭 **Factory Pattern** — Easy provider instantiation with `LLMFactory`
-- 🔐 **Environment Variables** — Automatic API key detection
-- 🚀 **No Vendor Lock-in** — Switch providers without code changes
+---
+
+## 📖 Overview
+
+PlugLLM is a powerful, unified Node.js package that provides a consistent interface for **13+ Large Language Model (LLM) providers**. Stop dealing with different SDKs, authentication methods, and API formats — use one simple API for all your LLM needs.
+
+### Why PlugLLM?
+
+- **🔌 Universal Interface**: Same methods work across OpenAI, Anthropic, Google, Groq, and more
+- **🧠 Built-in Memory**: Automatic conversation history management with sliding window
+- **🌊 Streaming First**: Real-time token streaming with async generators
+- **🏭 Zero Lock-in**: Switch providers by changing one line of code
+- **📦 Lightweight**: Minimal dependencies, optimized for performance
+- **🔐 Type Safe**: Full TypeScript support with comprehensive type definitions
+- **⚡ Production Ready**: Battle-tested error handling and retry logic
 
 ---
 
 ## 🚀 Quick Start
 
-### Method 1: Direct Provider Usage
+### Installation
 
-```js
-const { ChatOpenAI, Message } = require('plugllm');
+```bash
+npm install plugllm
+# or
+yarn add plugllm
+# or
+pnpm add plugllm
+```
 
-const llm = new ChatOpenAI({ apiKey: 'your-key', model: 'gpt-4o' });
+### Basic Usage
+
+```javascript
+const { ChatOpenAI } = require('plugllm');
+
+// Initialize with your API key
+const llm = new ChatOpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY, 
+  model: 'gpt-4o' 
+});
 
 // Simple generation
-const response = await llm.generate('What is Python?');
+const response = await llm.generate('What is the capital of France?');
 console.log(response.content);
+// Output: The capital of France is Paris.
 
-// With message history
-const messages = [
-  Message.system('You are a helpful assistant'),
-  Message.user('What is machine learning?'),
-];
-const response2 = await llm.generate(messages);
-console.log(response2.content);
+// With streaming
+for await (const chunk of llm.stream('Tell me a short story')) {
+  process.stdout.write(chunk);
+}
+
+// Conversational memory
+await llm.chat('My name is Alice');
+await llm.chat('What is my name?'); // Remembers "Alice"
 ```
 
-### Method 2: Using Factory Pattern
+### Using Different Providers
 
-```js
+```javascript
 const { LLMFactory } = require('plugllm');
 
-const llm = LLMFactory.create('groq', { apiKey: 'your-key', model: 'llama-3.3-70b-versatile' });
-const response = await llm.generate('Explain AI');
+// Switch providers instantly
+const openai = LLMFactory.create('openai', { model: 'gpt-4o' });
+const claude = LLMFactory.create('claude', { model: 'claude-sonnet-4-5' });
+const groq = LLMFactory.create('groq', { model: 'llama-3.3-70b-versatile' });
+
+// Same API for all providers
+const response = await claude.ask('Explain quantum computing');
 console.log(response.content);
 ```
 
-### Method 3: Ask Method (Simplest)
-
-```js
-const { ChatGroq } = require('plugllm');
-
-const llm = new ChatGroq({ apiKey: 'your-key', model: 'llama-3.3-70b-versatile' });
-
-// Simple ask
-const response = await llm.ask('What is Python?');
-
-// With system prompt
-const response2 = await llm.ask(
-  'What is Python?',
-  { systemPrompt: 'You are a beginner-friendly teacher. Explain simply.' }
-);
-console.log(response2.content);
-```
-
 ---
 
-## 💬 Chat with Context Memory
+## ✨ Key Features
 
-```js
-const { ChatOpenAI } = require('plugllm');
+### 🔌 Unified API
+```javascript
+// All providers support the same methods
+const methods = ['generate', 'stream', 'chat', 'ask', 'askStream'];
 
-const llm = new ChatOpenAI({ apiKey: 'your-key', model: 'gpt-4o', maxHistory: 10 });
+// Works with any provider
+[openai, claude, gemini, groq].forEach(llm => {
+  llm.generate('Hello'); // Same interface everywhere
+});
+```
 
-const r1 = await llm.chat('My name is Alice');
-console.log(r1.content);
+### 🧠 Context Memory
+```javascript
+const llm = new ChatOpenAI({ maxHistory: 20 }); // Keep last 20 messages
 
-const r2 = await llm.chat("What's my name?"); // Remembers "Alice"
-console.log(r2.content);
+// Automatic context management
+await llm.chat('I love Python programming');
+await llm.chat('I also enjoy JavaScript');
+await llm.chat('What programming languages did I mention?');
+// Response: You mentioned Python and JavaScript
 
 // Multiple independent sessions
-await llm.chat('I like Python', { sessionId: 'user1' });
-await llm.chat('I like Java',   { sessionId: 'user2' });
+await llm.chat('I prefer tea', { sessionId: 'user1' });
+await llm.chat('I prefer coffee', { sessionId: 'user2' });
 
-const history = llm.getConversationHistory('user1');
-console.log(history);
+// Session-specific memory
+const teaPreference = await llm.chat('What do I prefer?', { sessionId: 'user1' });
+console.log(teaPreference.content); // "You prefer tea"
 ```
 
----
-
-## 🌊 Streaming Responses
-
-```js
-const { ChatGroq } = require('plugllm');
-
-const llm = new ChatGroq({ apiKey: 'your-key', model: 'llama-3.3-70b-versatile' });
-
-// Streaming with generate
-for await (const chunk of llm.stream('Tell me a story')) {
-  process.stdout.write(chunk);
+### 🌊 Streaming Support
+```javascript
+// Real-time token streaming
+for await (const token of llm.stream('Write a haiku about coding')) {
+  process.stdout.write(token);
+  // Tokens appear as they're generated
 }
 
-// Streaming with ask
-for await (const chunk of llm.askStream('Count from 1 to 5')) {
-  process.stdout.write(chunk);
+// Streaming with ask method
+for await (const token of llm.askStream(
+  'Count from 1 to 5',
+  { systemPrompt: 'You are a counter. Only output numbers.' }
+)) {
+  console.log(token); // 1, 2, 3, 4, 5
 }
 ```
 
----
-
-## 🎯 Fluent Interface for Prompt Engineering
-
-```js
-const { ChatOpenAI } = require('plugllm');
-
-const llm = new ChatOpenAI({ apiKey: 'your-key', model: 'gpt-4o' });
-
+### 🎯 Fluent Interface
+```javascript
 const response = await llm
-  .withSystem('You are a helpful math tutor')
-  .withUser('What is the square root of 144?')
-  .withTemperature(0.5)
-  .withMaxTokens(100)
+  .withSystem('You are a math tutor who explains step-by-step')
+  .withUser('Solve: 2x + 5 = 13')
+  .withTemperature(0.3)
+  .withMaxTokens(200)
   .call();
 
 console.log(response.content);
+```
+
+### 🔐 Environment Variable Support
+```bash
+# .env file
+OPENAI_API_KEY=sk-xxx
+ANTHROPIC_API_KEY=sk-ant-xxx
+GEMINI_API_KEY=AIza...
+GROQ_API_KEY=gsk_xxx
+```
+
+```javascript
+// Automatically reads from environment
+const llm = new ChatOpenAI({ model: 'gpt-4o' }); // No API key needed in code
 ```
 
 ---
 
 ## 🌐 Supported Providers
 
-| Provider | Class | Default Model | Env Var |
-|---|---|---|---|
-| **OpenAI** | `ChatOpenAI` | gpt-4o | `OPENAI_API_KEY` |
-| **Google Gemini** | `ChatGemini` | gemini-2.0-flash | `GEMINI_API_KEY` |
-| **Groq** | `ChatGroq` | llama-3.3-70b-versatile | `GROQ_API_KEY` |
-| **Anthropic Claude** | `ChatClaude` | claude-sonnet-4-5 | `ANTHROPIC_API_KEY` |
-| **xAI Grok** | `ChatGrok` | grok-3-mini | `XAI_API_KEY` |
-| **Mistral AI** | `ChatMistral` | mistral-large-latest | `MISTRAL_API_KEY` |
-| **Meta Llama** | `ChatLlama` | Llama-4-Maverick-17B | `LLAMA_API_KEY` |
-| **DeepSeek** | `ChatDeepSeek` | deepseek-chat | `DEEPSEEK_API_KEY` |
-| **Alibaba Qwen** | `ChatQwen` | qwen-plus | `DASHSCOPE_API_KEY` |
-| **Moonshot Kimi** | `ChatKimi` | moonshot-v1-8k | `MOONSHOT_API_KEY` |
-| **Cohere** | `ChatCohere` | command-a-03-2025 | `CO_API_KEY` |
-| **SarvamAI** | `ChatSarvamAI` | sarvam-2b-v0.5 | `SARVAM_API_KEY` |
-| **Ollama (Local)** | `ChatOllama` | gemma3 | No API key needed |
+| Provider | Class | Default Model | Environment Variable | Documentation |
+|----------|-------|---------------|---------------------|---------------|
+| **OpenAI** | `ChatOpenAI` | `gpt-4o` | `OPENAI_API_KEY` | [Docs](https://platform.openai.com/docs) |
+| **Google Gemini** | `ChatGemini` | `gemini-2.0-flash` | `GEMINI_API_KEY` | [Docs](https://ai.google.dev/docs) |
+| **Groq** | `ChatGroq` | `llama-3.3-70b-versatile` | `GROQ_API_KEY` | [Docs](https://console.groq.com/docs) |
+| **Anthropic Claude** | `ChatClaude` | `claude-sonnet-4-5` | `ANTHROPIC_API_KEY` | [Docs](https://docs.anthropic.com) |
+| **xAI Grok** | `ChatGrok` | `grok-3-mini` | `XAI_API_KEY` | [Docs](https://docs.x.ai) |
+| **Mistral AI** | `ChatMistral` | `mistral-large-latest` | `MISTRAL_API_KEY` | [Docs](https://docs.mistral.ai) |
+| **Meta Llama** | `ChatLlama` | `Llama-4-Maverick-17B` | `LLAMA_API_KEY` | [Docs](https://www.llama.com/docs) |
+| **DeepSeek** | `ChatDeepSeek` | `deepseek-chat` | `DEEPSEEK_API_KEY` | [Docs](https://platform.deepseek.com/docs) |
+| **Alibaba Qwen** | `ChatQwen` | `qwen-plus` | `DASHSCOPE_API_KEY` | [Docs](https://dashscope.aliyun.com) |
+| **Moonshot Kimi** | `ChatKimi` | `moonshot-v1-8k` | `MOONSHOT_API_KEY` | [Docs](https://platform.moonshot.cn/docs) |
+| **Cohere** | `ChatCohere` | `command-a-03-2025` | `CO_API_KEY` | [Docs](https://docs.cohere.com) |
+| **SarvamAI** | `ChatSarvamAI` | `sarvam-2b-v0.5` | `SARVAM_API_KEY` | [Docs](https://docs.sarvam.ai) |
+| **Ollama (Local)** | `ChatOllama` | `gemma3` | None | [Docs](https://ollama.ai/docs) |
 
 ---
 
-## 🔧 Configuration
+## 💡 Examples
 
-### Direct Configuration
+### Building a Chatbot with Session Management
 
-```js
+```javascript
 const { ChatOpenAI } = require('plugllm');
 
-const llm = new ChatOpenAI({
-  model: 'gpt-4o',
-  apiKey: 'your-key',
-  temperature: 0.7,
-  maxTokens: 1000,
-});
-```
-
-### Environment Variables
-
-```bash
-# .env
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
-GROQ_API_KEY=gsk_...
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-```js
-// Automatically reads from environment
-const llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' });
-```
-
-### Factory Pattern
-
-```js
-const { LLMFactory } = require('plugllm');
-
-const llm = LLMFactory.create('claude', {
-  model: 'claude-sonnet-4-5',
-  apiKey: 'your-key',
-  temperature: 0.5,
-});
-```
-
----
-
-## 📊 Usage Examples
-
-### Building a Chatbot
-
-```js
-const { ChatOpenAI } = require('plugllm');
-
-class ChatBot {
-  constructor(apiKey) {
-    this.llm = new ChatOpenAI({ apiKey, model: 'gpt-4o', maxHistory: 20 });
-    this.sessionId = 'chatbot_session';
-    this.llm.setSystemMessage(
-      'You are a friendly AI assistant. Be helpful and concise.',
-      this.sessionId
-    );
+class MultiUserChatbot {
+  constructor() {
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-4o',
+      maxHistory: 15
+    });
   }
 
-  async chat(userMessage) {
-    const response = await this.llm.chat(userMessage, { sessionId: this.sessionId });
+  async handleMessage(userId, message) {
+    // Each user gets isolated conversation context
+    const response = await this.llm.chat(message, { sessionId: userId });
     return response.content;
   }
 
-  getHistory() {
-    return this.llm.getConversationHistory(this.sessionId);
+  getUserHistory(userId) {
+    return this.llm.getConversationHistory(userId);
+  }
+
+  resetUserConversation(userId) {
+    this.llm.resetConversation(userId);
   }
 }
 
-const bot = new ChatBot('your-key');
-console.log(await bot.chat('Hello!'));
-console.log(await bot.chat("My name is John. What's my name?")); // Remembers "John"
+// Usage
+const bot = new MultiUserChatbot();
+
+console.log(await bot.handleMessage('alice', 'Hello, I\'m Alice'));
+console.log(await bot.handleMessage('bob', 'Hi, I\'m Bob'));
+console.log(await bot.handleMessage('alice', 'What\'s my name?')); // Remembers Alice
+console.log(await bot.handleMessage('bob', 'What\'s my name?'));   // Remembers Bob
 ```
 
-### Multi-Provider Comparison
+### Multi-Provider Content Generation
 
-```js
-const { ChatOpenAI, ChatGemini, ChatGroq } = require('plugllm');
+```javascript
+const { ChatOpenAI, ChatClaude, ChatGemini } = require('plugllm');
 
-const providers = {
-  OpenAI:  new ChatOpenAI ({ apiKey: 'key1', model: 'gpt-4o' }),
-  Gemini:  new ChatGemini ({ apiKey: 'key2', model: 'gemini-2.0-flash' }),
-  Groq:    new ChatGroq   ({ apiKey: 'key3', model: 'llama-3.3-70b-versatile' }),
-};
+async function generateWithMultipleProviders(prompt) {
+  const providers = {
+    openai: new ChatOpenAI({ model: 'gpt-4o' }),
+    claude: new ChatClaude({ model: 'claude-sonnet-4-5' }),
+    gemini: new ChatGemini({ model: 'gemini-2.0-flash' })
+  };
 
-const prompt = 'Explain quantum computing in one paragraph';
-
-for (const [name, llm] of Object.entries(providers)) {
-  const response = await llm.ask(prompt, {}, { max_tokens: 150 });
-  console.log(`\n${name}:\n${response.content.slice(0, 200)}...`);
+  const results = {};
+  
+  for (const [name, llm] of Object.entries(providers)) {
+    try {
+      const startTime = Date.now();
+      const response = await llm.ask(prompt, {
+        systemPrompt: 'Be concise and accurate'
+      });
+      const duration = Date.now() - startTime;
+      
+      results[name] = {
+        content: response.content,
+        duration: `${duration}ms`,
+        tokens: response.usage.totalTokens
+      };
+    } catch (error) {
+      results[name] = { error: error.message };
+    }
+  }
+  
+  return results;
 }
+
+// Usage
+const results = await generateWithMultipleProviders('What is machine learning?');
+console.table(results);
 ```
 
-### Content Summarizer with Streaming
+### Streaming Document Summarizer
 
-```js
+```javascript
 const { ChatMistral } = require('plugllm');
+const fs = require('fs').promises;
 
-const llm = new ChatMistral({ apiKey: 'your-key', model: 'mistral-large-latest' });
-
-async function summarizeStreaming(text) {
-  const prompt = `Summarize this text in 3 bullet points:\n\n${text}`;
-  process.stdout.write('Summary: ');
-  for await (const chunk of llm.askStream(prompt, {}, { temperature: 0.3 })) {
-    process.stdout.write(chunk);
+class DocumentSummarizer {
+  constructor() {
+    this.llm = new ChatMistral({
+      apiKey: process.env.MISTRAL_API_KEY,
+      model: 'mistral-large-latest',
+      temperature: 0.3
+    });
   }
-  console.log();
+
+  async summarizeFile(filePath) {
+    const content = await fs.readFile(filePath, 'utf-8');
+    const prompt = `Summarize the following document in 3-5 bullet points:\n\n${content}`;
+    
+    console.log('Generating summary...\n');
+    
+    const summary = [];
+    for await (const chunk of this.llm.askStream(prompt)) {
+      process.stdout.write(chunk);
+      summary.push(chunk);
+    }
+    
+    return summary.join('');
+  }
+
+  async summarizeWithLengthControl(text, maxLength = 200) {
+    const response = await this.llm.ask(
+      text,
+      { systemPrompt: 'Create a concise summary' },
+      { max_tokens: maxLength }
+    );
+    
+    return response.content;
+  }
 }
 
-await summarizeStreaming('Your long article text here...');
+// Usage
+const summarizer = new DocumentSummarizer();
+await summarizer.summarizeFile('./long-article.txt');
 ```
 
----
+### Function Calling with Structured Output
 
-## 🔑 v1 API (Simple Config-Based)
+```javascript
+const { ChatOpenAI, Message } = require('plugllm');
 
-```js
-const { config, generate, chat, resetChat } = require('plugllm');
-
-config({ provider: 'openai', apiKey: 'your-key', model: 'gpt-4o' });
-
-// Simple generation
-const reply = await generate('What is JavaScript?');
-console.log(reply);
-
-// Stateful chat with sliding context window
-const r1 = await chat('My name is Bob');
-const r2 = await chat('What is my name?'); // remembers Bob
-resetChat(); // clears history
-```
-
----
-
-## 🐛 Error Handling
-
-```js
-const { ChatOpenAI } = require('plugllm');
-const { AuthenticationError, RateLimitError } = require('plugllm/types');
-
-const llm = new ChatOpenAI({ apiKey: 'your-key', model: 'gpt-4o' });
-
-try {
-  const response = await llm.ask('Hello');
-  console.log(response.content);
-} catch (err) {
-  if (err.name === 'AuthenticationError') {
-    console.error('Invalid API key.');
-  } else if (err.name === 'RateLimitError') {
-    console.error('Rate limit exceeded.');
-  } else {
-    console.error('Unexpected error:', err.message);
+class AIAssistant {
+  constructor() {
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-4o',
+      temperature: 0.1
+    });
   }
+
+  async extractStructuredData(text) {
+    const systemPrompt = `Extract the following information from the text and return as JSON:
+    - name: string
+    - age: number (if mentioned)
+    - occupation: string (if mentioned)
+    - location: string (if mentioned)`;
+
+    const response = await this.llm.ask(text, { systemPrompt });
+    
+    try {
+      // Parse the JSON response
+      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (error) {
+      console.error('Failed to parse JSON:', error);
+      return null;
+    }
+  }
+
+  async classifySentiment(text) {
+    const prompt = `Classify the sentiment of this text as positive, negative, or neutral. 
+    Return only the classification word.\n\nText: "${text}"`;
+    
+    const response = await this.llm.generate(prompt);
+    return response.content.trim().toLowerCase();
+  }
+}
+
+// Usage
+const assistant = new AIAssistant();
+const data = await assistant.extractStructuredData(
+  'John Smith, a 34-year-old software engineer from Seattle, enjoys hiking.'
+);
+console.log(data);
+// Output: { name: 'John Smith', age: 34, occupation: 'software engineer', location: 'Seattle' }
+```
+
+### Error Handling and Retry Logic
+
+```javascript
+const { ChatOpenAI } = require('plugllm');
+const { RateLimitError, AuthenticationError, NetworkError } = require('plugllm/types');
+
+class RobustLLMClient {
+  constructor() {
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-4o'
+    });
+    this.maxRetries = 3;
+    this.baseDelay = 1000;
+  }
+
+  async generateWithRetry(prompt, retryCount = 0) {
+    try {
+      return await this.llm.generate(prompt);
+    } catch (error) {
+      if (retryCount >= this.maxRetries) {
+        throw new Error(`Max retries (${this.maxRetries}) exceeded: ${error.message}`);
+      }
+
+      switch (error.name) {
+        case 'RateLimitError':
+          const delay = this.baseDelay * Math.pow(2, retryCount);
+          console.log(`Rate limited. Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+          return this.generateWithRetry(prompt, retryCount + 1);
+
+        case 'NetworkError':
+          console.log(`Network error. Retrying (${retryCount + 1}/${this.maxRetries})...`);
+          await this.sleep(this.baseDelay);
+          return this.generateWithRetry(prompt, retryCount + 1);
+
+        case 'AuthenticationError':
+          throw new Error('Invalid API key. Please check your credentials.');
+
+        default:
+          throw error;
+      }
+    }
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+// Usage
+const client = new RobustLLMClient();
+const response = await client.generateWithRetry('Explain artificial intelligence');
+```
+
+### Parallel Processing with Multiple Models
+
+```javascript
+const { LLMFactory } = require('plugllm');
+
+async function parallelGeneration(prompt) {
+  const providers = [
+    { name: 'GPT-4o', llm: LLMFactory.create('openai', { model: 'gpt-4o' }) },
+    { name: 'Claude', llm: LLMFactory.create('claude', { model: 'claude-sonnet-4-5' }) },
+    { name: 'Gemini', llm: LLMFactory.create('gemini', { model: 'gemini-2.0-flash' }) }
+  ];
+
+  // Run all providers in parallel
+  const promises = providers.map(async ({ name, llm }) => {
+    const start = performance.now();
+    const response = await llm.generate(prompt);
+    const duration = performance.now() - start;
+
+    return {
+      provider: name,
+      response: response.content,
+      duration: `${duration.toFixed(0)}ms`,
+      tokens: response.usage.totalTokens
+    };
+  });
+
+  const results = await Promise.allSettled(promises);
+  
+  return results.map((result, index) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    } else {
+      return {
+        provider: providers[index].name,
+        error: result.reason.message
+      };
+    }
+  });
+}
+
+// Usage
+const results = await parallelGeneration('What are the benefits of renewable energy?');
+results.forEach(r => {
+  if (r.error) {
+    console.log(`${r.provider}: ERROR - ${r.error}`);
+  } else {
+    console.log(`${r.provider}: ${r.duration}, ${r.tokens} tokens`);
+    console.log(r.response.slice(0, 100) + '...\n');
+  }
+});
+```
+
+### Advanced Conversation Management
+
+```javascript
+const { ChatOpenAI, Message } = require('plugllm');
+
+class ConversationManager {
+  constructor() {
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-4o',
+      maxHistory: 20
+    });
+  }
+
+  async startNewTopic(sessionId, topic) {
+    this.llm.resetConversation(sessionId);
+    this.llm.setSystemMessage(
+      `You are an expert on ${topic}. Provide detailed, accurate information.`,
+      sessionId
+    );
+  }
+
+  async askFollowUp(sessionId, question) {
+    const response = await this.llm.chat(question, { sessionId });
+    return response.content;
+  }
+
+  getConversationSummary(sessionId) {
+    const history = this.llm.getConversationHistory(sessionId);
+    const userMessages = history.filter(m => m.role === 'user').length;
+    const assistantMessages = history.filter(m => m.role === 'assistant').length;
+    
+    return {
+      totalMessages: history.length,
+      userQuestions: userMessages,
+      assistantResponses: assistantMessages,
+      systemPrompt: history[0]?.role === 'system' ? history[0].content : null
+    };
+  }
+
+  exportConversation(sessionId) {
+    const history = this.llm.getConversationHistory(sessionId);
+    return history.map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n\n');
+  }
+}
+
+// Usage
+const manager = new ConversationManager();
+const sessionId = 'science-chat-001';
+
+await manager.startNewTopic(sessionId, 'quantum physics');
+console.log(await manager.askFollowUp(sessionId, 'What is quantum entanglement?'));
+console.log(await manager.askFollowUp(sessionId, 'How is it used in quantum computing?'));
+
+const summary = manager.getConversationSummary(sessionId);
+console.log('Conversation stats:', summary);
+
+// Export for saving
+const exportData = manager.exportConversation(sessionId);
+await fs.writeFile(`./chat-${sessionId}.txt`, exportData);
+```
+
+### Simple CLI Tool
+
+```javascript
+#!/usr/bin/env node
+
+const readline = require('readline');
+const { LLMFactory } = require('plugllm');
+require('dotenv').config();
+
+class CLIAssistant {
+  constructor() {
+    // Read provider from command line args or default to openai
+    const provider = process.argv[2] || 'openai';
+    
+    this.llm = LLMFactory.create(provider, {
+      model: process.env[`${provider.toUpperCase()}_MODEL`]
+    });
+    
+    this.sessionId = `cli-${Date.now()}`;
+    this.setupInterface();
+  }
+
+  setupInterface() {
+    this.rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      prompt: '🤖 > '
+    });
+  }
+
+  async start() {
+    console.log(`
+╔══════════════════════════════════════╗
+║     🤖 PlugLLM CLI Assistant         ║
+║  Type 'exit' to quit, 'clear' to     ║
+║  reset conversation, 'save' to       ║
+║  export chat history                 ║
+╚══════════════════════════════════════╝
+    `);
+
+    this.llm.setSystemMessage(
+      'You are a helpful CLI assistant. Be concise but thorough.',
+      this.sessionId
+    );
+
+    this.rl.prompt();
+    await this.handleInput();
+  }
+
+  async handleInput() {
+    for await (const line of this.rl) {
+      const input = line.trim();
+      
+      if (input.toLowerCase() === 'exit') {
+        console.log('Goodbye! 👋');
+        process.exit(0);
+      }
+      
+      if (input.toLowerCase() === 'clear') {
+        this.llm.clearConversation(this.sessionId);
+        console.log('✨ Conversation cleared\n');
+        this.rl.prompt();
+        continue;
+      }
+
+      if (input.toLowerCase() === 'save') {
+        const history = this.llm.getConversationHistory(this.sessionId);
+        const filename = `chat-${Date.now()}.txt`;
+        const fs = require('fs');
+        const content = history.map(m => `[${m.role}]: ${m.content}`).join('\n\n');
+        fs.writeFileSync(filename, content);
+        console.log(`💾 Chat saved to ${filename}\n`);
+        this.rl.prompt();
+        continue;
+      }
+
+      process.stdout.write('🤖 Thinking...');
+      
+      try {
+        let fullResponse = '';
+        process.stdout.write('\r🤖 ');
+        
+        for await (const chunk of this.llm.askStream(input, { sessionId: this.sessionId })) {
+          process.stdout.write(chunk);
+          fullResponse += chunk;
+        }
+        
+        console.log('\n');
+      } catch (error) {
+        console.log('\n❌ Error:', error.message, '\n');
+      }
+      
+      this.rl.prompt();
+    }
+  }
+}
+
+// Run the CLI
+if (require.main === module) {
+  const cli = new CLIAssistant();
+  cli.start().catch(console.error);
 }
 ```
 
@@ -317,39 +642,288 @@ try {
 
 ## 📚 API Reference
 
-### Core Classes
+### BaseLLM Class
 
-**`BaseLLM`** — Abstract base class for all providers.
+Abstract base class that all provider implementations extend.
 
-**`ChatResponse`** — Unified response object:
-- `content` — The generated text
-- `model` — Model used
-- `usage` — Token usage statistics
-- `rawResponse` — Original API response
-- `finishReason` — Stop reason
+#### Constructor
 
-**`Message`** — Message factory:
-- `Message.user(content)`
-- `Message.assistant(content)`
-- `Message.system(content)`
+```typescript
+new BaseLLM(options: BaseLLMOptions)
+```
 
-### Key Methods
+```typescript
+interface BaseLLMOptions {
+  apiKey?: string;           // API key (reads from env if omitted)
+  model?: string;            // Model identifier
+  temperature?: number;      // 0-2, defaults vary by provider
+  maxTokens?: number;        // Max tokens to generate
+  maxHistory?: number;       // Messages to retain (default: 10)
+  baseURL?: string;          // Custom API endpoint
+}
+```
 
-| Method | Description |
-|---|---|
-| `generate(prompt, kwargs)` | Basic text generation |
-| `stream(prompt, kwargs)` | Async generator streaming |
-| `chat(message, opts, kwargs)` | Context-aware conversation |
-| `ask(userPrompt, opts, kwargs)` | Simple Q&A with optional system prompt |
-| `askStream(userPrompt, opts, kwargs)` | Streaming Q&A |
-| `withSystem(prompt).withUser(prompt).call()` | Fluent interface |
-| `getConversationHistory(sessionId)` | Get chat history |
-| `clearConversation(sessionId)` | Clear history (keep system msg) |
-| `resetConversation(sessionId)` | Full reset |
-| `setSystemMessage(msg, sessionId)` | Set system prompt for session |
+#### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `generate()` | `prompt: string \| Message[]`, `kwargs?: object` | `Promise<ChatResponse>` | Generate a response |
+| `stream()` | `prompt: string \| Message[]`, `kwargs?: object` | `AsyncGenerator<string>` | Stream response tokens |
+| `chat()` | `message: string`, `options?: ChatOptions`, `kwargs?: object` | `Promise<ChatResponse>` | Continue conversation |
+| `ask()` | `userPrompt: string`, `options?: AskOptions`, `kwargs?: object` | `Promise<ChatResponse>` | Simple Q&A |
+| `askStream()` | `userPrompt: string`, `options?: AskOptions`, `kwargs?: object` | `AsyncGenerator<string>` | Stream Q&A |
+| `getConversationHistory()` | `sessionId?: string` | `Message[]` | Get chat history |
+| `clearConversation()` | `sessionId?: string` | `void` | Clear history |
+| `resetConversation()` | `sessionId?: string` | `void` | Full reset |
+| `setSystemMessage()` | `message: string`, `sessionId?: string` | `void` | Set system prompt |
+
+#### Fluent Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `withSystem(content)` | `this` | Set system message |
+| `withUser(content)` | `this` | Add user message |
+| `withAssistant(content)` | `this` | Add assistant message |
+| `withTemperature(value)` | `this` | Set temperature |
+| `withMaxTokens(value)` | `this` | Set max tokens |
+| `call(kwargs?)` | `Promise<ChatResponse>` | Execute chain |
+
+### ChatResponse Interface
+
+```typescript
+interface ChatResponse {
+  content: string;
+  model: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  rawResponse: any;
+  finishReason: 'stop' | 'length' | 'content_filter' | 'tool_calls' | null;
+}
+```
+
+### Message Factory
+
+```typescript
+// Static methods
+Message.user(content: string): Message
+Message.assistant(content: string): Message
+Message.system(content: string): Message
+
+// Interface
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+```
+
+### LLMFactory
+
+```typescript
+LLMFactory.create(provider: string, options?: object): BaseLLM
+
+// Supported provider strings:
+type Provider = 
+  | 'openai' | 'chatopenai'
+  | 'gemini' | 'chatgemini' | 'google'
+  | 'groq' | 'chatgroq'
+  | 'claude' | 'chatclaude' | 'anthropic'
+  | 'grok' | 'chatgrok' | 'xai'
+  | 'mistral' | 'chatmistral'
+  | 'llama' | 'chatllama' | 'meta'
+  | 'deepseek' | 'chatdeepseek'
+  | 'qwen' | 'chatqwen' | 'alibaba'
+  | 'kimi' | 'chatkimi' | 'moonshot'
+  | 'cohere' | 'chatcohere'
+  | 'sarvam' | 'chatsarvamai'
+  | 'ollama' | 'chatollama';
+```
+
+### Error Types
+
+```javascript
+const {
+  AuthenticationError,  // Invalid API key
+  RateLimitError,       // Rate limit exceeded
+  ValidationError,      // Invalid parameters
+  APIError,            // Provider API error
+  NetworkError         // Connection issues
+} = require('plugllm/types');
+```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in your project root:
+
+```bash
+# OpenAI
+OPENAI_API_KEY=sk-proj-xxx
+
+# Google Gemini
+GEMINI_API_KEY=AIzaSyDxxx
+
+# Groq
+GROQ_API_KEY=gsk_xxx
+
+# Anthropic Claude
+ANTHROPIC_API_KEY=sk-ant-api03-xxx
+
+# xAI Grok
+XAI_API_KEY=xai-xxx
+
+# Mistral AI
+MISTRAL_API_KEY=xxx
+
+# Meta Llama
+LLAMA_API_KEY=xxx
+
+# DeepSeek
+DEEPSEEK_API_KEY=xxx
+
+# Alibaba Qwen
+DASHSCOPE_API_KEY=sk-xxx
+
+# Moonshot Kimi
+MOONSHOT_API_KEY=sk-xxx
+
+# Cohere
+CO_API_KEY=xxx
+
+# SarvamAI
+SARVAM_API_KEY=xxx
+```
+
+### TypeScript Configuration
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  }
+}
+```
+
+```typescript
+// TypeScript usage example
+import { ChatOpenAI, Message, ChatResponse } from 'plugllm';
+import type { BaseLLMOptions, AskOptions } from 'plugllm';
+
+const options: BaseLLMOptions = {
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'gpt-4o',
+  temperature: 0.7,
+  maxTokens: 1000,
+  maxHistory: 15
+};
+
+const llm = new ChatOpenAI(options);
+
+const askOptions: AskOptions = {
+  systemPrompt: 'You are a TypeScript expert',
+  sessionId: 'ts-session'
+};
+
+const response: ChatResponse = await llm.ask(
+  'What are decorators?',
+  askOptions
+);
+
+console.log(response.content);
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/firoziya/plugllm.git
+cd plugllm
+
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build the project
+npm run build
+```
+
+### Adding a New Provider
+
+1. Create a new class extending `BaseLLM` in `src/providers/`
+2. Implement required methods (`generate`, `stream`)
+3. Add provider to `LLMFactory`
+4. Add tests in `tests/providers/`
+5. Update documentation
+
+### Commit Convention
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation changes
+- `test:` Adding or updating tests
+- `refactor:` Code refactoring
+- `perf:` Performance improvements
 
 ---
 
 ## 📄 License
 
 MIT © [Yash Kumar Firoziya](https://github.com/firoziya)
+
+---
+
+## 🙏 Acknowledgments
+
+- All the amazing LLM providers for their APIs
+- The open-source community for inspiration and support
+- Contributors who help make PlugLLM better
+
+---
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/firoziya/plugllm)
+- [npm Package](https://www.npmjs.com/package/plugllm)
+- [Issue Tracker](https://github.com/firoziya/plugllm/issues)
+- [Changelog](https://github.com/firoziya/plugllm/blob/main/CHANGELOG.md)
+
+---
+
+## 📞 Support
+
+- **Documentation**: [Full API Docs](https://github.com/firoziya/plugllm#readme)
+- **Issues**: [GitHub Issues](https://github.com/firoziya/plugllm/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/firoziya/plugllm/discussions)
+- **Email**: firoziya@example.com
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Yash Kumar Firoziya](https://github.com/firoziya)**
+
+⭐ Star us on GitHub — it helps!
+
+</div>
