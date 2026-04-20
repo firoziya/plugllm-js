@@ -904,9 +904,9 @@ MIT © [Yash Kumar Firoziya](https://github.com/firoziya)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/firoziya/plugllm)
+- [GitHub Repository](https://github.com/firoziya/plugllm-js)
 - [npm Package](https://www.npmjs.com/package/plugllm)
-- [Issue Tracker](https://github.com/firoziya/plugllm/issues)
+- [Issue Tracker](https://github.com/firoziya/plugllm-js/issues)
 - [Changelog](https://github.com/firoziya/plugllm/blob/main/CHANGELOG.md)
 
 ---
@@ -916,7 +916,7 @@ MIT © [Yash Kumar Firoziya](https://github.com/firoziya)
 - **Documentation**: [Full API Docs](https://github.com/firoziya/plugllm#readme)
 - **Issues**: [GitHub Issues](https://github.com/firoziya/plugllm/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/firoziya/plugllm/discussions)
-- **Email**: firoziya@example.com
+- **Email**: ykfiroziyash@gmail.com
 
 ---
 
