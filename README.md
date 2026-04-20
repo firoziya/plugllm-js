@@ -51,7 +51,7 @@ pnpm add plugllm
 ### Basic Usage
 
 ```javascript
-const { ChatOpenAI } = require('plugllm');
+import { ChatOpenAI } from 'plugllm';
 
 // Initialize with your API key
 const llm = new ChatOpenAI({ 
@@ -77,7 +77,7 @@ await llm.chat('What is my name?'); // Remembers "Alice"
 ### Using Different Providers
 
 ```javascript
-const { LLMFactory } = require('plugllm');
+import { LLMFactory } from 'plugllm';
 
 // Switch providers instantly
 const openai = LLMFactory.create('openai', { model: 'gpt-4o' });
@@ -94,18 +94,30 @@ console.log(response.content);
 ## ✨ Key Features
 
 ### 🔌 Unified API
-```javascript
-// All providers support the same methods
-const methods = ['generate', 'stream', 'chat', 'ask', 'askStream'];
 
-// Works with any provider
-[openai, claude, gemini, groq].forEach(llm => {
-  llm.generate('Hello'); // Same interface everywhere
-});
+```javascript
+import { ChatOpenAI, ChatClaude, ChatGemini, ChatGroq } from 'plugllm';
+
+// All providers support the same methods
+const providers = [
+  new ChatOpenAI({ model: 'gpt-4o' }),
+  new ChatClaude({ model: 'claude-sonnet-4-5' }),
+  new ChatGemini({ model: 'gemini-2.0-flash' }),
+  new ChatGroq({ model: 'llama-3.3-70b-versatile' })
+];
+
+// Same interface everywhere
+for (const llm of providers) {
+  const response = await llm.generate('Hello');
+  console.log(response.content);
+}
 ```
 
 ### 🧠 Context Memory
+
 ```javascript
+import { ChatOpenAI } from 'plugllm';
+
 const llm = new ChatOpenAI({ maxHistory: 20 }); // Keep last 20 messages
 
 // Automatic context management
@@ -124,7 +136,12 @@ console.log(teaPreference.content); // "You prefer tea"
 ```
 
 ### 🌊 Streaming Support
+
 ```javascript
+import { ChatOpenAI } from 'plugllm';
+
+const llm = new ChatOpenAI({ model: 'gpt-4o' });
+
 // Real-time token streaming
 for await (const token of llm.stream('Write a haiku about coding')) {
   process.stdout.write(token);
@@ -141,7 +158,12 @@ for await (const token of llm.askStream(
 ```
 
 ### 🎯 Fluent Interface
+
 ```javascript
+import { ChatOpenAI } from 'plugllm';
+
+const llm = new ChatOpenAI({ model: 'gpt-4o' });
+
 const response = await llm
   .withSystem('You are a math tutor who explains step-by-step')
   .withUser('Solve: 2x + 5 = 13')
@@ -153,6 +175,7 @@ console.log(response.content);
 ```
 
 ### 🔐 Environment Variable Support
+
 ```bash
 # .env file
 OPENAI_API_KEY=sk-xxx
@@ -162,6 +185,9 @@ GROQ_API_KEY=gsk_xxx
 ```
 
 ```javascript
+import { ChatOpenAI } from 'plugllm';
+import 'dotenv/config';
+
 // Automatically reads from environment
 const llm = new ChatOpenAI({ model: 'gpt-4o' }); // No API key needed in code
 ```
@@ -193,7 +219,7 @@ const llm = new ChatOpenAI({ model: 'gpt-4o' }); // No API key needed in code
 ### Building a Chatbot with Session Management
 
 ```javascript
-const { ChatOpenAI } = require('plugllm');
+import { ChatOpenAI } from 'plugllm';
 
 class MultiUserChatbot {
   constructor() {
@@ -231,7 +257,7 @@ console.log(await bot.handleMessage('bob', 'What\'s my name?'));   // Remembers 
 ### Multi-Provider Content Generation
 
 ```javascript
-const { ChatOpenAI, ChatClaude, ChatGemini } = require('plugllm');
+import { ChatOpenAI, ChatClaude, ChatGemini } from 'plugllm';
 
 async function generateWithMultipleProviders(prompt) {
   const providers = {
@@ -271,8 +297,8 @@ console.table(results);
 ### Streaming Document Summarizer
 
 ```javascript
-const { ChatMistral } = require('plugllm');
-const fs = require('fs').promises;
+import { ChatMistral } from 'plugllm';
+import fs from 'fs/promises';
 
 class DocumentSummarizer {
   constructor() {
@@ -317,7 +343,7 @@ await summarizer.summarizeFile('./long-article.txt');
 ### Function Calling with Structured Output
 
 ```javascript
-const { ChatOpenAI, Message } = require('plugllm');
+import { ChatOpenAI, Message } from 'plugllm';
 
 class AIAssistant {
   constructor() {
@@ -368,8 +394,8 @@ console.log(data);
 ### Error Handling and Retry Logic
 
 ```javascript
-const { ChatOpenAI } = require('plugllm');
-const { RateLimitError, AuthenticationError, NetworkError } = require('plugllm/types');
+import { ChatOpenAI } from 'plugllm';
+import { RateLimitError, AuthenticationError, NetworkError } from 'plugllm/types';
 
 class RobustLLMClient {
   constructor() {
@@ -423,7 +449,7 @@ const response = await client.generateWithRetry('Explain artificial intelligence
 ### Parallel Processing with Multiple Models
 
 ```javascript
-const { LLMFactory } = require('plugllm');
+import { LLMFactory } from 'plugllm';
 
 async function parallelGeneration(prompt) {
   const providers = [
@@ -475,7 +501,8 @@ results.forEach(r => {
 ### Advanced Conversation Management
 
 ```javascript
-const { ChatOpenAI, Message } = require('plugllm');
+import { ChatOpenAI, Message } from 'plugllm';
+import fs from 'fs/promises';
 
 class ConversationManager {
   constructor() {
@@ -516,6 +543,11 @@ class ConversationManager {
     const history = this.llm.getConversationHistory(sessionId);
     return history.map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n\n');
   }
+
+  async saveConversation(sessionId, filePath) {
+    const exportData = this.exportConversation(sessionId);
+    await fs.writeFile(filePath, exportData);
+  }
 }
 
 // Usage
@@ -530,8 +562,7 @@ const summary = manager.getConversationSummary(sessionId);
 console.log('Conversation stats:', summary);
 
 // Export for saving
-const exportData = manager.exportConversation(sessionId);
-await fs.writeFile(`./chat-${sessionId}.txt`, exportData);
+await manager.saveConversation(sessionId, `./chat-${sessionId}.txt`);
 ```
 
 ### Simple CLI Tool
@@ -539,9 +570,9 @@ await fs.writeFile(`./chat-${sessionId}.txt`, exportData);
 ```javascript
 #!/usr/bin/env node
 
-const readline = require('readline');
-const { LLMFactory } = require('plugllm');
-require('dotenv').config();
+import readline from 'readline';
+import { LLMFactory } from 'plugllm';
+import 'dotenv/config';
 
 class CLIAssistant {
   constructor() {
@@ -602,7 +633,7 @@ class CLIAssistant {
       if (input.toLowerCase() === 'save') {
         const history = this.llm.getConversationHistory(this.sessionId);
         const filename = `chat-${Date.now()}.txt`;
-        const fs = require('fs');
+        const fs = await import('fs');
         const content = history.map(m => `[${m.role}]: ${m.content}`).join('\n\n');
         fs.writeFileSync(filename, content);
         console.log(`💾 Chat saved to ${filename}\n`);
@@ -632,10 +663,40 @@ class CLIAssistant {
 }
 
 // Run the CLI
-if (require.main === module) {
-  const cli = new CLIAssistant();
-  cli.start().catch(console.error);
+const cli = new CLIAssistant();
+cli.start().catch(console.error);
+```
+
+### Environment Variables Example
+
+```javascript
+import { config } from 'dotenv';
+import { ChatOpenAI, ChatClaude, ChatGemini } from 'plugllm';
+
+// Load environment variables
+config();
+
+async function demonstrateEnvSupport() {
+  // All these will automatically read API keys from environment
+  const openai = new ChatOpenAI({ model: 'gpt-4o' });
+  const claude = new ChatClaude({ model: 'claude-sonnet-4-5' });
+  const gemini = new ChatGemini({ model: 'gemini-2.0-flash' });
+
+  const prompt = 'What is 2+2?';
+  
+  const responses = await Promise.all([
+    openai.generate(prompt),
+    claude.generate(prompt),
+    gemini.generate(prompt)
+  ]);
+
+  responses.forEach((response, i) => {
+    const providers = ['OpenAI', 'Claude', 'Gemini'];
+    console.log(`${providers[i]}: ${response.content}`);
+  });
 }
+
+demonstrateEnvSupport();
 ```
 
 ---
@@ -707,6 +768,8 @@ interface ChatResponse {
 ### Message Factory
 
 ```typescript
+import { Message } from 'plugllm';
+
 // Static methods
 Message.user(content: string): Message
 Message.assistant(content: string): Message
@@ -722,6 +785,8 @@ interface Message {
 ### LLMFactory
 
 ```typescript
+import { LLMFactory } from 'plugllm';
+
 LLMFactory.create(provider: string, options?: object): BaseLLM
 
 // Supported provider strings:
@@ -744,13 +809,13 @@ type Provider =
 ### Error Types
 
 ```javascript
-const {
+import {
   AuthenticationError,  // Invalid API key
   RateLimitError,       // Rate limit exceeded
   ValidationError,      // Invalid parameters
   APIError,            // Provider API error
   NetworkError         // Connection issues
-} = require('plugllm/types');
+} from 'plugllm/types';
 ```
 
 ---
@@ -806,7 +871,8 @@ SARVAM_API_KEY=xxx
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
@@ -841,6 +907,31 @@ const response: ChatResponse = await llm.ask(
   askOptions
 );
 
+console.log(response.content);
+```
+
+### ES Modules Configuration
+
+```json
+// package.json
+{
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  }
+}
+```
+
+```javascript
+// index.js - ES Module syntax
+import { ChatOpenAI, LLMFactory, Message } from 'plugllm';
+import 'dotenv/config';
+
+const llm = new ChatOpenAI({ model: 'gpt-4o' });
+
+// Top-level await supported in ES modules
+const response = await llm.generate('Hello from ES modules!');
 console.log(response.content);
 ```
 
