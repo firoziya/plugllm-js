@@ -2,11 +2,11 @@
 
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/plugllm.svg)](https://www.npmjs.com/package/plugllm)
+[![npm version](https://img.shields.io/npm/v/plugllm-js.svg)](https://www.npmjs.com/package/plugllm-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Downloads](https://img.shields.io/npm/dt/plugllm.svg)](https://www.npmjs.com/package/plugllm)
-[![GitHub Stars](https://img.shields.io/github/stars/firoziya/plugllm?style=social)](https://github.com/firoziya/plugllm)
-[![Node.js Version](https://img.shields.io/node/v/plugllm.svg)](https://nodejs.org)
+[![Downloads](https://img.shields.io/npm/dt/plugllm-js.svg)](https://www.npmjs.com/package/plugllm-js)
+[![GitHub Stars](https://img.shields.io/github/stars/firoziya/plugllm-js?style=social)](https://github.com/firoziya/plugllm-js)
+[![Node.js Version](https://img.shields.io/node/v/plugllm-js.svg)](https://nodejs.org)
 
 **One API to rule them all — Unified interface for 13+ LLM providers**
 
